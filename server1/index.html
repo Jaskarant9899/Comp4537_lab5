@@ -1,0 +1,85 @@
+<!-- Server1: index.html (origin 1) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patients Database</title>
+</head>
+<body>
+  <h1>Patients Database</h1>
+
+  <!-- Form to insert data -->
+  <form id="insertForm">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required><br><br>
+    <label for="dob">Date of Birth:</label>
+    <input type="date" id="dob" name="dob" required><br><br>
+    <button type="submit">Insert Data</button>
+  </form>
+
+  <!-- Form to execute SQL queries -->
+  <form id="queryForm">
+    <label for="query">SQL Query:</label><br>
+    <textarea id="query" name="query" rows="4" cols="50"></textarea><br><br>
+    <button type="submit">Submit Query</button>
+  </form>
+
+  <!-- Container to display server response -->
+  <div id="response"></div>
+
+  <script>
+    // Function to handle form submission for inserting data
+    document.getElementById('insertForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const formData = new FormData(this);
+      fetch('http://localhost:3000/insert', {
+        method: 'POST',
+        body: JSON.stringify(Object.fromEntries(formData.entries())),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('response').textContent = JSON.stringify(data);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('response').textContent = 'Error inserting data';
+      });
+    });
+  
+    // Function to handle form submission for executing SQL queries
+    document.getElementById('queryForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const query = document.getElementById('query').value;
+      let url = `http://localhost:3000/select?query=${encodeURIComponent(query)}`;
+      if (query.trim().toLowerCase().startsWith('insert')) {
+        // If query starts with 'INSERT', send via POST
+        fetch(url, { method: 'POST' })
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById('response').textContent = JSON.stringify(data);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('response').textContent = 'Error executing query';
+          });
+      } else {
+        // Otherwise, send via GET
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById('response').textContent = JSON.stringify(data);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('response').textContent = 'Error executing query';
+          });
+      }
+    });
+  </script>
+  
+</body>
+</html>
